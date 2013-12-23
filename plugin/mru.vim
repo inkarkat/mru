@@ -775,6 +775,12 @@ function! s:MRU_Open_Window(...)
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_horiz')<CR>
     nnoremap <buffer> <silent> <C-CR>
                 \ :call <SID>MRU_Select_File_Cmd('edit,useopen')<Bar>only<CR>
+    vnoremap <buffer> <silent> <C-CR>
+                \ :<C-u>if line("'<") == line("'>")<Bar>
+		\   call <SID>MRU_Select_File_Cmd('edit,useopen')<Bar>only<Bar>
+		\ else<Bar>
+		\   echoerr "Only a single file can be opened"<Bar>
+		\ endif<CR>
     nnoremap <buffer> <silent> O
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_vert')<CR>
     vnoremap <buffer> <silent> O
