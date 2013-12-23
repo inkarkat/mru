@@ -773,6 +773,8 @@ function! s:MRU_Open_Window(...)
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_horiz')<CR>
     vnoremap <buffer> <silent> <S-CR>
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_horiz')<CR>
+    nnoremap <buffer> <silent> <C-CR>
+                \ :call <SID>MRU_Select_File_Cmd('edit,useopen')<Bar>only<CR>
     nnoremap <buffer> <silent> O
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_vert')<CR>
     vnoremap <buffer> <silent> O
