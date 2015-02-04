@@ -1013,6 +1013,8 @@ endfunction
 call s:MRU_LoadList()
 
 " MRU autocommands {{{1
+augroup MRU
+autocmd!
 " Autocommands to detect the most recently used files
 autocmd BufRead * call s:MRU_AddFile(expand('<abuf>'))
 autocmd BufNewFile * call s:MRU_AddFile(expand('<abuf>'))
@@ -1023,6 +1025,7 @@ autocmd BufWritePost * call s:MRU_AddFile(expand('<abuf>'))
 " files. Use the following autocmds to prevent this.
 autocmd QuickFixCmdPre *vimgrep* let s:mru_list_locked = 1
 autocmd QuickFixCmdPost *vimgrep* let s:mru_list_locked = 0
+augroup END
 
 " Command to open the MRU window
 command! -nargs=? -complete=customlist,s:MRU_Complete MRU
