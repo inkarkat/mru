@@ -1,8 +1,8 @@
 " File: mru.vim
 " Author: Yegappan Lakshmanan (yegappan AT yahoo DOT com)
-" Version: 3.8.1
-" Last Modified: March 9, 2014
-" Copyright: Copyright (C) 2003-2014 Yegappan Lakshmanan
+" Version: 3.9
+" Last Modified: Feb 3, 2015
+" Copyright: Copyright (C) 2003-2015 Yegappan Lakshmanan
 " License:   Permission is hereby granted to use and distribute this code,
 "            with or without modifications, provided that this copyright
 "            notice is copied with it. Like anything else that's free,
@@ -483,11 +483,13 @@ function! s:MRU_Edit_File(filename, sanitized)
             exe winnum . 'wincmd w'
         endif
     else
-        if &modified || &buftype != '' || &previewwindow
+        if !&hidden && (&modified || &buftype != '' || &previewwindow)
             " Current buffer has unsaved changes or is a special buffer or is
-            " the preview window.  So open the file in a new window
+            " the preview window.  The 'hidden' option is also not set.
+            " So open the file in a new window.
             exe 'split ' . esc_fname
         else
+            " The current file can be replaced with the selected file.
             exe 'edit ' . esc_fname
         endif
     endif
@@ -518,7 +520,7 @@ function! s:MRU_Open_File_In_Tab(fname, esc_fname)
 	    exe 'tabnext ' . i
 	else
 	    " Open a new tab as the last tab page
-	    exe '999tabnew ' . a:esc_fname
+	    exe '$tabnew ' . a:esc_fname
 	endif
     endif
 
@@ -590,7 +592,7 @@ function! s:MRU_Window_Edit_File(fname, multi, edit_type, open_type)
 
             let split_window = 0
 
-            if &modified || &previewwindow || a:multi
+            if (!&hidden && (&modified || &previewwindow)) || a:multi
                 " Current buffer has unsaved changes or is the preview window
                 " or the user is opening multiple files
                 " So open the file in a new window
@@ -638,7 +640,9 @@ endfunction
 " If multiple file names are selected using visual mode, then open multiple
 " files (either in split windows or tabs)
 function! s:MRU_Select_File_Cmd(opt) range
-    let [edit_type, open_type] = split(a:opt, ',')
+    let opt = split(a:opt, ',')
+    let [edit_type, open_type] = opt[0:1]
+    let open_further_type = get(opt, 2, open_type)
 
     let fnames = getline(a:firstline, a:lastline)
 
@@ -659,6 +663,7 @@ function! s:MRU_Select_File_Cmd(opt) range
         let file = matchstr(f, g:MRU_Filename_Format.parser)
 
         call s:MRU_Window_Edit_File(file, multi, edit_type, open_type)
+	let open_type = open_further_type
 
         if a:firstline != a:lastline
             " Opening multiple files
@@ -704,6 +709,8 @@ function! s:MRU_Open_Window(...)
             " If not already in the window, jump to it
             exe winnum . 'wincmd w'
         endif
+
+        setlocal modifiable
 
         " Delete the contents of the buffer to the black-hole register
         silent! %delete _
@@ -786,8 +793,12 @@ function! s:MRU_Open_Window(...)
     vnoremap <buffer> <silent> O
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_vert')<CR>
     nnoremap <buffer> <silent> t
-                \ :call <SID>MRU_Select_File_Cmd('edit,newtab')<CR>
+                \ :call <SID>MRU_Select_File_Cmd('edit,newtab,newwin_horiz')<CR>
     vnoremap <buffer> <silent> t
+                \ :call <SID>MRU_Select_File_Cmd('edit,newtab,newwin_horiz')<CR>
+    nnoremap <buffer> <silent> T
+                \ :call <SID>MRU_Select_File_Cmd('edit,newtab')<CR>
+    vnoremap <buffer> <silent> T
                 \ :call <SID>MRU_Select_File_Cmd('edit,newtab')<CR>
     nnoremap <buffer> <silent> v
                 \ :call <SID>MRU_Select_File_Cmd('view,useopen')<CR>
@@ -1018,6 +1029,8 @@ endfunction
 call s:MRU_LoadList()
 
 " MRU autocommands {{{1
+augroup MRU
+autocmd!
 " Autocommands to detect the most recently used files
 autocmd BufRead * call s:MRU_AddFile(expand('<abuf>'))
 autocmd BufNewFile * call s:MRU_AddFile(expand('<abuf>'))
@@ -1028,6 +1041,7 @@ autocmd BufWritePost * call s:MRU_AddFile(expand('<abuf>'))
 " files. Use the following autocmds to prevent this.
 autocmd QuickFixCmdPre *vimgrep* let s:mru_list_locked = 1
 autocmd QuickFixCmdPost *vimgrep* let s:mru_list_locked = 0
+augroup END
 
 " Command to open the MRU window
 command! -nargs=? -complete=customlist,s:MRU_Complete MRU
