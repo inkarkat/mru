@@ -640,7 +640,9 @@ endfunction
 " If multiple file names are selected using visual mode, then open multiple
 " files (either in split windows or tabs)
 function! s:MRU_Select_File_Cmd(opt) range
-    let [edit_type, open_type] = split(a:opt, ',')
+    let opt = split(a:opt, ',')
+    let [edit_type, open_type] = opt[0:1]
+    let open_further_type = get(opt, 2, open_type)
 
     let fnames = getline(a:firstline, a:lastline)
 
@@ -661,6 +663,7 @@ function! s:MRU_Select_File_Cmd(opt) range
         let file = matchstr(f, g:MRU_Filename_Format.parser)
 
         call s:MRU_Window_Edit_File(file, multi, edit_type, open_type)
+	let open_type = open_further_type
 
         if a:firstline != a:lastline
             " Opening multiple files
@@ -782,8 +785,12 @@ function! s:MRU_Open_Window(...)
     vnoremap <buffer> <silent> O
                 \ :call <SID>MRU_Select_File_Cmd('edit,newwin_vert')<CR>
     nnoremap <buffer> <silent> t
-                \ :call <SID>MRU_Select_File_Cmd('edit,newtab')<CR>
+                \ :call <SID>MRU_Select_File_Cmd('edit,newtab,newwin_horiz')<CR>
     vnoremap <buffer> <silent> t
+                \ :call <SID>MRU_Select_File_Cmd('edit,newtab,newwin_horiz')<CR>
+    nnoremap <buffer> <silent> T
+                \ :call <SID>MRU_Select_File_Cmd('edit,newtab')<CR>
+    vnoremap <buffer> <silent> T
                 \ :call <SID>MRU_Select_File_Cmd('edit,newtab')<CR>
     nnoremap <buffer> <silent> v
                 \ :call <SID>MRU_Select_File_Cmd('view,useopen')<CR>
